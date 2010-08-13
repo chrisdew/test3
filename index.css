@@ -1,0 +1,9 @@
+h1 {
+	color: #00f;
+}
+
+canvas#display_div {
+	width: 480px;
+	height: 320px;
+	background: #ddd;
+}
