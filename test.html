@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" 
+                    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<title>foo</title>
+<head>
+    <script type="text/javascript" src="jquery-1.4.2.js"></script>
+    <script type="text/javascript" src="qunit.js"></script>
+    <link rel="stylesheet" href="reset.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="qunit.css" type="text/css" media="screen" />
+
+    <script type="text/javascript" src="engine.js"></script>
+	
+    <script type="text/javascript">
+    $(document).ready(function(){
+	
+module("engine");
+
+test("simple", function() {
+	deepEqual(2 + 2, 4);
+	deepEqual(           new Sector(new V(0.0, 0.0), new V(5.0, 5.0))
+	         .intersects(new Sector(new V(5.0, 0.0), new V(0.0, 5.0))
+			 ), false);
+	deepEqual(           new Sector(new V(1.0, 3.0), new V(9.0, 3.0))
+	         .intersects(new Sector(new V(0.0, 1.0), new V(2.0, 1.0))
+			 ), false);
+	deepEqual(           new Sector(new V(1.0, 5.0), new V(6.0, 8.0))
+	         .intersects(new Sector(new V(0.5, 3.0), new V(6.0, 4.0))
+			 ), false);
+	deepEqual(           new Sector(new V(1.0, 1.0), new V(3.0, 8.0))
+	         .intersects(new Sector(new V(0.5, 2.0), new V(4.0, 7.0))
+			 ), false);
+	deepEqual(           new Sector(new V(1.0, 2.0), new V(3.0, 6.0))
+	         .intersects(new Sector(new V(2.0, 4.0), new V(4.0, 8.0))
+			 ), false);
+			 /*
+	deepEqual(           new Sector(new V(0.0, 0.0), new V(5.0, 5.0))
+	         .intersects(new Sector(new V(5.0, 0.0), new V(0.0, 5.0))
+			 ), false);
+	deepEqual(           new Sector(new V(0.0, 0.0), new V(5.0, 5.0))
+	         .intersects(new Sector(new V(5.0, 0.0), new V(0.0, 5.0))
+			 ), false);
+		*/
+}); 
+
+
+
+});
+</script>
+  
+</head>
+<body>
+<div id="qunit">
+<h1 id="qunit-header">QUnit tests</h1>
+<h2 id="qunit-banner"></h2>
+<h2 id="qunit-userAgent"></h2>
+<ol id="qunit-tests"></ol>
+</div>
+</body>
+</html>

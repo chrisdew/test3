@@ -2,8 +2,16 @@ h1 {
 	color: #00f;
 }
 
-canvas#display_div {
+canvas#display {
+	float: left;
 	width: 480px;
 	height: 320px;
 	background: #ddd;
+}
+
+canvas#map {
+	float: left;
+	width: 480px;
+	height: 320px;
+	background: #eee;
 }
