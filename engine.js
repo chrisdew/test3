@@ -33,11 +33,12 @@ Sector.prototype.INTERSECTING = "INTERSECTING";
 
 Sector.prototype.intersects = function(other_line) {
 	var denom = ((other_line.end.y - other_line.begin.y)*(this.end.x - this.begin.x)) -
-                ((other_line.end.x_ - other_line.begin.x)*(this.end.y - this.begin.y));
+                ((other_line.end.x - other_line.begin.x)*(this.end.y - this.begin.y));
 	var nume_a = ((other_line.end.x - other_line.begin.x)*(this.begin.y - other_line.begin.y)) -
                  ((other_line.end.y - other_line.begin.y)*(this.begin.x - other_line.begin.x));		
 	var nume_b = ((this.end.x - this.begin.x)*(this.begin.y - other_line.begin.y)) -
-                 ((this.end.y - this.begin.y)*(this.begin.x - other_line.begin.x));	
+                 ((this.end.y - this.begin.y)*(this.begin.x - other_line.begin.x));
+	//console.log(denom, nume_a, nume_b);	
 	if (denom === 0.0) {
         if(nume_a === 0.0 && nume_b === 0.0) {
 			return false;
@@ -48,6 +49,7 @@ Sector.prototype.intersects = function(other_line) {
     }			 		
 	var ua = nume_a / denom;
     var ub = nume_b / denom; 
+	//console.log(ua, ub);	
 	if (ua >= 0.0 && ua <= 1.0 && ub >= 0.0 && ub <= 1.0) {
         // Get the intersection point.
         //intersection.x_ = begin_.x_ + ua*(end_.x_ - begin_.x_);

@@ -19,7 +19,7 @@ test("simple", function() {
 	deepEqual(2 + 2, 4);
 	deepEqual(           new Sector(new V(0.0, 0.0), new V(5.0, 5.0))
 	         .intersects(new Sector(new V(5.0, 0.0), new V(0.0, 5.0))
-			 ), false);
+			 ), new V(2.5, 2.5));
 	deepEqual(           new Sector(new V(1.0, 3.0), new V(9.0, 3.0))
 	         .intersects(new Sector(new V(0.0, 1.0), new V(2.0, 1.0))
 			 ), false);
@@ -28,7 +28,7 @@ test("simple", function() {
 			 ), false);
 	deepEqual(           new Sector(new V(1.0, 1.0), new V(3.0, 8.0))
 	         .intersects(new Sector(new V(0.5, 2.0), new V(4.0, 7.0))
-			 ), false);
+			 ), new V(1.8275862068965516, 3.896551724137931));
 	deepEqual(           new Sector(new V(1.0, 2.0), new V(3.0, 6.0))
 	         .intersects(new Sector(new V(2.0, 4.0), new V(4.0, 8.0))
 			 ), false);
