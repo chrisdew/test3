@@ -11,14 +11,17 @@
 		<script type="text/javascript">
 			$(document).ready(function() {
    				// do stuff when DOM is ready
-				engine = new Engine();
-				//engine.render("display_div");
+				engine = new Engine("display", "map");
+				engine.render_map();
+				for (var i = 0; i < 10; i++) {
+					engine.render_display();
+				}
  			});
 		</script> 
     </head>
     <body>
         <h1>New Web Project Page</h1>
-		<canvas id="display"></canvas>
-		<canvas id="map"></canvas>
+		<canvas id="display" width="480" height="320"></canvas>
+		<canvas id="map" width="480" height="320"></canvas>
     </body>
 </html>

@@ -15,31 +15,32 @@
 	
 module("engine");
 
-test("simple", function() {
-	deepEqual(2 + 2, 4);
-	deepEqual(           new Sector(new V(0.0, 0.0), new V(5.0, 5.0))
-	         .intersects(new Sector(new V(5.0, 0.0), new V(0.0, 5.0))
-			 ), new V(2.5, 2.5));
+test("vector", function() {
+	deepEqual(new V(0.0, 0.0).add(new V(5.0, 5.0)), new V(5.0, 5.0)); 
+	deepEqual(new V(0.0, 0.0).sub(new V(5.0, 5.0)), new V(-5.0, -5.0)); 
+	deepEqual(new V(5.0, 5.0).rot(Math.PI), new V(-4.999999999999999, -5.000000000000001)); 
+	deepEqual(new V(5.0, 5.0).rot(DEGREES_90), new V(5.0, -5.0)); 
+	deepEqual(new V(5.0, 5.0).rot_about(DEGREES_90, new V(5.0, 5.0)), new V(5.0, 5.0)); 
+	deepEqual(new V(5.0, 5.0).rot_about(DEGREES_90, new V(2.5, 2.5)), new V(5.0, 0.0)); 
+});
+
+test("sector", function() {
+	deepEqual(           new Sector(new V(0.0, 0.0), new V(10.0, 10.0))
+	         .intersects(new Sector(new V(5.0, 0.0), new V(0.0, 5.0)))
+			 , { result: new V(2.5, 2.5), state: INTERSECTING, proportion: 0.25, proportion_other: 0.5});
 	deepEqual(           new Sector(new V(1.0, 3.0), new V(9.0, 3.0))
-	         .intersects(new Sector(new V(0.0, 1.0), new V(2.0, 1.0))
-			 ), false);
+	         .intersects(new Sector(new V(0.0, 1.0), new V(2.0, 1.0)))
+			 , { result: false, state: PARALLEL });
 	deepEqual(           new Sector(new V(1.0, 5.0), new V(6.0, 8.0))
-	         .intersects(new Sector(new V(0.5, 3.0), new V(6.0, 4.0))
-			 ), false);
+	         .intersects(new Sector(new V(0.5, 3.0), new V(6.0, 4.0)))
+			 , { result: false, state: NOT_INTERSECTING });
 	deepEqual(           new Sector(new V(1.0, 1.0), new V(3.0, 8.0))
-	         .intersects(new Sector(new V(0.5, 2.0), new V(4.0, 7.0))
-			 ), new V(1.8275862068965516, 3.896551724137931));
+	         .intersects(new Sector(new V(0.5, 2.0), new V(4.0, 7.0)))
+			 , { result: new V(1.8275862068965516, 3.896551724137931), state: INTERSECTING, proportion: 0.41379310344827586, proportion_other: 0.3793103448275862 });
 	deepEqual(           new Sector(new V(1.0, 2.0), new V(3.0, 6.0))
-	         .intersects(new Sector(new V(2.0, 4.0), new V(4.0, 8.0))
-			 ), false);
-			 /*
-	deepEqual(           new Sector(new V(0.0, 0.0), new V(5.0, 5.0))
-	         .intersects(new Sector(new V(5.0, 0.0), new V(0.0, 5.0))
-			 ), false);
-	deepEqual(           new Sector(new V(0.0, 0.0), new V(5.0, 5.0))
-	         .intersects(new Sector(new V(5.0, 0.0), new V(0.0, 5.0))
-			 ), false);
-		*/
+	         .intersects(new Sector(new V(2.0, 4.0), new V(4.0, 8.0)))
+			 , { result: false, state: COINCIDENT });
+	deepEqual(new Sector(new V(0.0, 0.0), new V(5.0, 10.0)).pos_along(0.3), new V(3.5, 7.0));
 }); 
 
 
