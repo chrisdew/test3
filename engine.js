@@ -123,6 +123,8 @@ function Camera(pos, rot, fov, range) {
 	this.rot = rot;
 	this.fov = fov;
 	this.range = range;
+	this.texture = new Image();   // Create new Image object  
+	this.texture.src = 'brick_wall.jpg'; // Set source path  
 }
 /**
  * This returns a Sector which passes through a column in the display.
@@ -136,12 +138,20 @@ Camera.prototype.get_intersector = function(column) {
 	
 	return new Sector(this.pos, range_sector.pos_along(column));	
 }
+Camera.prototype.safeDrawImage = function(tox,img,sx,sy,sw,sh,dx,dy,dw,dh) {
+        if (!img||!tox) return;
+        if (sx<0) { dx-=(dw/sw)*sx;sw+=sx; sx=0; }
+        if (sy<0) { dy-=(dh/sh)*sy;sh+=sy; sy=0; }
+        if (sx+sw>img.width) { dw=(dw/sw)*(img.width-sx);sw=img.width-sx;}
+        if (sy+sh>img.height) { dh=(dh/sh)*(img.height-sy);sh=img.height-sy;}
+        try { if ((sh>0)&&(sw>0)&&(sx<img.width)&&(sy<img.height)) tox.drawImage(img, sx,sy,sw,sh,dx,dy,dw,dh); } catch(e){}
+}
 Camera.prototype.render_display = function(display, walls) {
 	console.log("Camera#render_display(", display, walls, ")");
 	
 	var ctx = display.element.getContext("2d");
-	ctx.strokeStyle = '#aaaaaa';
-	ctx.lineWidth   = 1;
+	//ctx.strokeStyle = '#aaaaaa';
+	//ctx.lineWidth   = 1;
 	var start = (new Date()).getMilliseconds();
 	for (var x = 0; x < display.size.x; x++) {
 		var intersector = this.get_intersector(x / display.size.x);
@@ -162,13 +172,25 @@ Camera.prototype.render_display = function(display, walls) {
 		if (nearest_wall != null) {
 			var size = display.size.y / 2 * (0.1333333333333333 / nearest_intersect.proportion);
 			//console.log(x, (display.size.y / 2 - size), display.size, size);
-			ctx.moveTo(x, (display.size.y / 3 - size));
-			ctx.lineTo(x, (display.size.y / 3 + 2*size));
+			//ctx.moveTo(x, (display.size.y / 3 - size));
+			//ctx.lineTo(x, (display.size.y / 3 + 2*size));
+			var top = display.size.y / 3 - size;
+			this.safeDrawImage( ctx
+			                  , this.texture
+			                  , this.texture.width * nearest_intersect.proportion_other //sx
+					          , 0 //sy
+					          , 1 //sWidth
+					          , this.texture.height //sHeight
+					          , x //dx
+					          , top //dy
+					          , 1 //dWidth
+					          , size * 3 //dHeight
+					          ) ;
 		}
 	}
 	var end = (new Date()).getMilliseconds();
 	console.log("fps:", 1000.0 / (end - start));
-	ctx.stroke();		
+	//ctx.stroke();		
 	
 }
 Camera.prototype.render_map = function(map, walls) {
@@ -214,12 +236,12 @@ function Engine(display_id, map_id) {
 				 ] ;
 }
 
-Engine.prototype.render_display = function(canvas) {
-	console.log("Engine#render_display(", canvas, ")");
+Engine.prototype.render_display = function() {
+	console.log("Engine#render_display()");
 	this.camera.render_display(this.display, this.walls);
 }
 
-Engine.prototype.render_map = function(canvas) {
-	console.log("Engine#render_map(", canvas, ")");
+Engine.prototype.render_map = function() {
+	console.log("Engine#render_map()");
 	this.camera.render_map(this.map, this.walls);	
 }
