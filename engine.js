@@ -98,9 +98,17 @@ Sector.prototype.intersects = function(other_line) {
 	return { result: false, state: NOT_INTERSECTING };
 }
 
+function ImageBank(callback) {
+    alert("bar");
+	this.texture = new Image();   // Create new Image object  
+	this.texture.onload = callback;
+    this.texture.src = 'brick_wall.jpg'; // Set source path
+}
+
 function Display(element) {
 	console.log("Display", this);
 	this.element = element;
+	this.element.mozImageSmoothingEnabled = false;
 	this.size = new V($(element).width(), $(element).height());
 }
 
@@ -118,13 +126,12 @@ Map.prototype.pos_to_coords = function(v) {
 }
 
 
-function Camera(pos, rot, fov, range) {
+function Camera(pos, rot, fov, range, texture) {
 	this.pos = pos;
 	this.rot = rot;
 	this.fov = fov;
 	this.range = range;
-	this.texture = new Image();   // Create new Image object  
-	this.texture.src = 'brick_wall.jpg'; // Set source path  
+	this.texture = texture;  
 }
 /**
  * This returns a Sector which passes through a column in the display.
@@ -146,15 +153,22 @@ Camera.prototype.safeDrawImage = function(tox,img,sx,sy,sw,sh,dx,dy,dw,dh) {
         if (sy+sh>img.height) { dh=(dh/sh)*(img.height-sy);sh=img.height-sy;}
         try { if ((sh>0)&&(sw>0)&&(sx<img.width)&&(sy<img.height)) tox.drawImage(img, sx,sy,sw,sh,dx,dy,dw,dh); } catch(e){}
 }
-Camera.prototype.render_display = function(display, walls) {
+Camera.prototype.render_display = function(display, walls, texture, res) {
 	console.log("Camera#render_display(", display, walls, ")");
 	
 	var ctx = display.element.getContext("2d");
+	
+	//var self = this;
+	//setTimeout(function() {
+    //    console.log("ctx.drawImage(", self.texture, 0, 0, ")");
+    //    ctx.drawImage(self.texture, 0, 0);
+    //}, 3000);
+	
 	//ctx.strokeStyle = '#aaaaaa';
 	//ctx.lineWidth   = 1;
 	var start = (new Date()).getMilliseconds();
-	for (var x = 0; x < display.size.x; x++) {
-		var intersector = this.get_intersector(x / display.size.x);
+	for (var x = 0; x < display.size.x; x += res) {
+		var intersector = this.get_intersector((x) / display.size.x);
 		var nearest_wall = null;
 		var nearest_intersect = 1.0;
 		for (var i in walls) {
@@ -176,14 +190,14 @@ Camera.prototype.render_display = function(display, walls) {
 			//ctx.lineTo(x, (display.size.y / 3 + 2*size));
 			var top = display.size.y / 3 - size;
 			this.safeDrawImage( ctx
-			                  , this.texture
-			                  , this.texture.width * nearest_intersect.proportion_other //sx
+			                  , texture
+			                  , texture.width * nearest_intersect.proportion_other //sx
 					          , 0 //sy
-					          , 1 //sWidth
-					          , this.texture.height //sHeight
+					          , res //sWidth
+					          , texture.height //sHeight
 					          , x //dx
 					          , top //dy
-					          , 1 //dWidth
+					          , res //dWidth
 					          , size * 3 //dHeight
 					          ) ;
 		}
@@ -196,6 +210,7 @@ Camera.prototype.render_display = function(display, walls) {
 Camera.prototype.render_map = function(map, walls) {
 	console.log("Camera#render_map(", map, walls, ")");
 	var ctx = map.element.getContext("2d");
+	
 	
 	for(var i in walls) {
 		wall = walls[i];
@@ -226,7 +241,7 @@ Camera.prototype.render_map = function(map, walls) {
 }
 
 
-function Engine(display_id, map_id) {
+function Engine(display_id, map_id, callback) {
 	console.log("Engine()", this);
 	this.display = new Display(document.getElementById(display_id));
 	this.map = new Map(document.getElementById(map_id));
@@ -234,11 +249,12 @@ function Engine(display_id, map_id) {
 	this.walls = [ new Sector(new V(-3, -9), new V(+3, -9))
 				 , new Sector(new V(-3, -3), new V(-3, -9))
 				 ] ;
+	this.image_bank = new ImageBank(callback);
 }
 
-Engine.prototype.render_display = function() {
+Engine.prototype.render_display = function(res) {
 	console.log("Engine#render_display()");
-	this.camera.render_display(this.display, this.walls);
+	this.camera.render_display(this.display, this.walls, this.image_bank.texture, res);
 }
 
 Engine.prototype.render_map = function() {

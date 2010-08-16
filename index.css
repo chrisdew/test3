@@ -4,8 +4,8 @@ h1 {
 
 canvas#display {
 	float: left;
-	width: 480px;
-	height: 320px;
+	width: 960px;
+	height: 640px;
 	background: #ddd;
 }
 
