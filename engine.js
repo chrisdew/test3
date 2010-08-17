@@ -154,7 +154,7 @@ Camera.prototype.safeDrawImage = function(tox,img,sx,sy,sw,sh,dx,dy,dw,dh) {
         try { if ((sh>0)&&(sw>0)&&(sx<img.width)&&(sy<img.height)) tox.drawImage(img, sx,sy,sw,sh,dx,dy,dw,dh); } catch(e){}
 }
 Camera.prototype.render_display = function(display, walls, texture, res) {
-	console.log("Camera#render_display(", display, walls, ")");
+	//console.log("Camera#render_display(", display, walls, ")");
 	
 	var ctx = display.element.getContext("2d");
 	
@@ -166,7 +166,7 @@ Camera.prototype.render_display = function(display, walls, texture, res) {
 	
 	//ctx.strokeStyle = '#aaaaaa';
 	//ctx.lineWidth   = 1;
-	var start = (new Date()).getMilliseconds();
+	//var start = (new Date()).getMilliseconds();
 	for (var x = 0; x < display.size.x; x += res) {
 		var intersector = this.get_intersector((x) / display.size.x);
 		var nearest_wall = null;
@@ -202,8 +202,8 @@ Camera.prototype.render_display = function(display, walls, texture, res) {
 					          ) ;
 		}
 	}
-	var end = (new Date()).getMilliseconds();
-	console.log("fps:", 1000.0 / (end - start));
+	//var end = (new Date()).getMilliseconds();
+	//console.log("fps:", 1000.0 / (end - start));
 	//ctx.stroke();		
 	
 }
@@ -252,8 +252,31 @@ function Engine(display_id, map_id, callback) {
 	this.image_bank = new ImageBank(callback);
 }
 
+Engine.prototype.render_loop = function(){
+	var start = (new Date()).getMilliseconds();
+	//this.camera.render_display(this.display, this.walls, this.image_bank.texture, 3);
+	this.affine();
+	var end = (new Date()).getMilliseconds();
+	var self = this;
+	var delay = 1000/30 - (end - start);
+	if (delay < 1 || start > end) { delay = 1; }
+	console.log("delay", delay);
+	setTimeout(function() { self.render_loop() }, delay);
+}
+
+Engine.prototype.affine = function(){
+	var ctx = this.display.element.getContext("2d");
+	
+	var h = this.image_bank.texture.height;
+	var w = this.image_bank.texture.width;
+	
+	ctx.setTransform(1, 0, -0.2, 1, 0, 0);
+	ctx.drawImage(this.image_bank.texture, 0, 0);
+
+}
+
 Engine.prototype.render_display = function(res) {
-	console.log("Engine#render_display()");
+	//console.log("Engine#render_display()");
 	this.camera.render_display(this.display, this.walls, this.image_bank.texture, res);
 }
 

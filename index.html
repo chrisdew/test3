@@ -13,12 +13,7 @@
    				// do stuff when DOM is ready
 				engine = new Engine("display", "map", function() {
 					console.log("foo");
-				    engine.render_map();
-					for (var j = 9; j > 0; j -= 2) {
-						for (var i = 0; i < 10; i++) {
-							engine.render_display(j);
-						}
-					}
+				    engine.render_loop();
 				});
  			});
 		</script> 
