@@ -99,11 +99,12 @@ Sector.prototype.intersects = function(other_line) {
 }
 
 function ImageBank(callback) {
-    alert("bar");
 	this.texture = new Image();   // Create new Image object  
 	this.texture.onload = callback;
     this.texture.src = 'brick_wall.jpg'; // Set source path
 }
+
+
 
 function Display(element) {
 	console.log("Display", this);
@@ -126,12 +127,20 @@ Map.prototype.pos_to_coords = function(v) {
 }
 
 
-function Camera(pos, rot, fov, range, texture) {
+function Camera(pos, rot, fov, range) {
 	this.pos = pos;
 	this.rot = rot;
 	this.fov = fov;
 	this.range = range;
-	this.texture = texture;  
+	
+	this.speed = 0;
+	this.dir = 0;
+}
+
+Camera.prototype.update = function() {
+	//console.log("rot", this.rot, "dir", this.dir, "pos", this.pos, "speed", this.speed);
+	this.rot += this.dir;
+	this.pos = this.pos.add(new V(this.speed,0).rot(this.rot));
 }
 /**
  * This returns a Sector which passes through a column in the display.
@@ -156,7 +165,13 @@ Camera.prototype.safeDrawImage = function(tox,img,sx,sy,sw,sh,dx,dy,dw,dh) {
 Camera.prototype.render_display = function(display, walls, texture, res) {
 	//console.log("Camera#render_display(", display, walls, ")");
 	
+	//display.element.width = display.element.width;
 	var ctx = display.element.getContext("2d");
+	ctx.fillStyle = 'rgb(64,64,64)';
+	ctx.fillRect(0, 0, display.size.x - 1, display.size.y / 3);
+	ctx.fillStyle = 'rgb(96,96,96)';
+	ctx.fillRect(0, display.size.y / 3, display.size.x - 1, display.size.y -1);
+	
 	
 	//var self = this;
 	//setTimeout(function() {
@@ -191,7 +206,7 @@ Camera.prototype.render_display = function(display, walls, texture, res) {
 			var top = display.size.y / 3 - size;
 			this.safeDrawImage( ctx
 			                  , texture
-			                  , texture.width * nearest_intersect.proportion_other //sx
+			                  , (texture.width - 1) * nearest_intersect.proportion_other //sx
 					          , 0 //sy
 					          , res //sWidth
 					          , texture.height //sHeight
@@ -247,24 +262,69 @@ function Engine(display_id, map_id, callback) {
 	this.map = new Map(document.getElementById(map_id));
 	this.camera = new Camera(new V(0,0), NORTH, DEGREES_60, 30);
 	this.walls = [ new Sector(new V(-3, -9), new V(+3, -9))
-				 , new Sector(new V(-3, -3), new V(-3, -9))
+				 , new Sector(new V(-3, -3), new V(-5, -12))
 				 ] ;
+	this.bind_keys();
 	this.image_bank = new ImageBank(callback);
 }
 
-Engine.prototype.render_loop = function(){
+// bind keyboard events to game functions (movement, etc)
+Engine.prototype.bind_keys = function () {
+	console.log("Engine::bind_keys", this);
+	var self = this;
+  document.onkeydown = function(e) {
+    e = e || window.event;
+      console.log("down e.keyCode", e.keyCode);
+    switch (e.keyCode) { // which key was pressed?
+      case 38: // up, move player forward, ie. increase speed
+        self.camera.speed = 0.6; break;
+      case 40: // down, move player backward, set negative speed
+        self.camera.speed = -0.6; break;
+      case 37: // left, rotate player left
+        self.camera.dir = 0.03; break;
+      case 39: // right, rotate player right
+        self.camera.dir = -0.03; break;
+    }
+  }
+  // stop the player movement/rotation when the keys are released
+  document.onkeyup = function(e) {
+    e = e || window.event;
+      console.log("up e.keyCode", e.keyCode);
+    switch (e.keyCode) {
+      case 38:
+      case 40:
+        self.camera.speed = 0; break; 
+      case 37:
+      case 39:
+        self.camera.dir = 0; break;
+    }
+  }
+}
+Engine.prototype.render_loop = function(fps){
 	var start = (new Date()).getMilliseconds();
-	//this.camera.render_display(this.display, this.walls, this.image_bank.texture, 3);
-	this.affine();
+	this.camera.render_display(this.display, this.walls, this.image_bank.texture, 3);
+	//this.affine();
 	var end = (new Date()).getMilliseconds();
 	var self = this;
-	var delay = 1000/30 - (end - start);
+	var delay = 1000/fps - (end - start);
 	if (delay < 1 || start > end) { delay = 1; }
-	console.log("delay", delay);
-	setTimeout(function() { self.render_loop() }, delay);
+	//console.log("render delay", delay);
+	setTimeout(function() { self.render_loop(fps) }, delay);
 }
 
-Engine.prototype.affine = function(){
+Engine.prototype.control_loop = function(fps){
+	var start = (new Date()).getMilliseconds();
+	this.camera.update();
+	var end = (new Date()).getMilliseconds();
+	var self = this;
+	var delay = 1000/fps - (end - start);
+	if (delay < 1 || start > end) { delay = 1; }
+	//console.log("control delay", delay);
+	setTimeout(function() { self.control_loop(fps) }, delay);
+}
+
+
+Engine.prototype.affine = function(fps){
 	var ctx = this.display.element.getContext("2d");
 	
 	var h = this.image_bank.texture.height;

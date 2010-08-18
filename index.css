@@ -11,7 +11,7 @@ canvas#display {
 
 canvas#map {
 	float: left;
-	width: 480px;
-	height: 320px;
+	width: 48px;
+	height: 32px;
 	background: #eee;
 }
