@@ -167,10 +167,14 @@ Camera.prototype.render_display = function(display, walls, texture, res) {
 	
 	//display.element.width = display.element.width;
 	var ctx = display.element.getContext("2d");
+	ctx.canvas.width  = window.innerWidth;
+	ctx.canvas.height = window.innerHeight;
+	
+	
 	ctx.fillStyle = 'rgb(64,64,64)';
-	ctx.fillRect(0, 0, display.size.x - 1, display.size.y / 3);
+	ctx.fillRect(0, 0, display.size.x, display.size.y / 3);
 	ctx.fillStyle = 'rgb(96,96,96)';
-	ctx.fillRect(0, display.size.y / 3, display.size.x - 1, display.size.y -1);
+	ctx.fillRect(0, display.size.y / 3, display.size.x, display.size.y -1);
 	
 	
 	//var self = this;
@@ -208,7 +212,7 @@ Camera.prototype.render_display = function(display, walls, texture, res) {
 			                  , texture
 			                  , (texture.width - 1) * nearest_intersect.proportion_other //sx
 					          , 0 //sy
-					          , res //sWidth
+					          , 1//res //sWidth
 					          , texture.height //sHeight
 					          , x //dx
 					          , top //dy
@@ -225,7 +229,6 @@ Camera.prototype.render_display = function(display, walls, texture, res) {
 Camera.prototype.render_map = function(map, walls) {
 	console.log("Camera#render_map(", map, walls, ")");
 	var ctx = map.element.getContext("2d");
-	
 	
 	for(var i in walls) {
 		wall = walls[i];
@@ -262,10 +265,51 @@ function Engine(display_id, map_id, callback) {
 	this.map = new Map(document.getElementById(map_id));
 	this.camera = new Camera(new V(0,0), NORTH, DEGREES_60, 30);
 	this.walls = [ new Sector(new V(-3, -9), new V(+3, -9))
-				 , new Sector(new V(-3, -3), new V(-5, -12))
+				 , new Sector(new V(-3, -3), new V(-3, -9))
 				 ] ;
+	this.MAX_SLOW_FRAME_COUNTER = 15;
+	this.MIN_SLOW_FRAME_COUNTER = 0;
+	this.slow_frame_counter = (this.MAX_SLOW_FRAME_COUNTER + this.MIN_SLOW_FRAME_COUNTER) / 2;
+	this.MAX_RES = 15;
+	this.MIN_RES = 1;
+	this.resolution = (this.MAX_RES + this.MIN_RES) / 2;
+				 
 	this.bind_keys();
+	this.set_resize();
 	this.image_bank = new ImageBank(callback);
+}
+
+Engine.prototype.set_resize = function() {
+	console.log("set_resize");
+	var self = this;
+	
+	window.onload = window.onresize = function() {
+		console.log("onResize");
+    	var el = self.display.element;
+
+    	// For IE compatibility http://www.google.com/search?q=get+viewport+size+js
+    	var viewportWidth = window.innerWidth;
+    	var viewportHeight = window.innerHeight;
+
+    	var canvasWidth = viewportWidth;
+    	var canvasHeight = viewportHeight;
+    	el.style.position = "fixed";
+    	el.setAttribute("width", canvasWidth);
+    	el.setAttribute("height", canvasHeight);
+		self.display.size = new V(canvasWidth, canvasHeight);
+    	//el.style.top = (viewportHeight - canvasHeight) / 2;
+    	//el.style.left = (viewportWidth - canvasWidth) / 2;
+
+    	//window.ctx = el.getContext("2d");
+    	//ctx.clearRect(0,0,canvasWidth,canvasHeight);
+    	//ctx.fillStyle = 'yellow';
+    	//ctx.moveTo(0, canvasHeight/2);
+    	//ctx.lineTo(canvasWidth/2, 0);
+    	//ctx.lineTo(canvasWidth, canvasHeight/2);
+    	//ctx.lineTo(canvasWidth/2, canvasHeight);
+    	//ctx.lineTo(0, canvasHeight/2);
+    	//ctx.fill()
+	}
 }
 
 // bind keyboard events to game functions (movement, etc)
@@ -301,14 +345,40 @@ Engine.prototype.bind_keys = function () {
   }
 }
 Engine.prototype.render_loop = function(fps){
+	
+	
+	
 	var start = (new Date()).getMilliseconds();
-	this.camera.render_display(this.display, this.walls, this.image_bank.texture, 3);
+	this.camera.render_display(this.display, this.walls, this.image_bank.texture, this.resolution);
 	//this.affine();
 	var end = (new Date()).getMilliseconds();
 	var self = this;
 	var delay = 1000/fps - (end - start);
-	if (delay < 1 || start > end) { delay = 1; }
-	//console.log("render delay", delay);
+	if (delay < 2 || start > end) { delay = 2; }
+	console.log("render delay", delay);
+	
+	if (delay <= 2) { // running slow
+		this.slow_frame_counter--;
+	}
+	if (delay > 5) { // lots of spare cpu }
+		this.slow_frame_counter++;
+	}
+	
+	if (this.slow_frame_counter < this.MIN_SLOW_FRAME_COUNTER) {
+		console.log("trying to decrease resolution");
+		this.slow_frame_counter = (this.MAX_SLOW_FRAME_COUNTER + this.MIN_SLOW_FRAME_COUNTER) / 2;
+		if (this.resolution < this.MAX_RES) {
+			this.resolution++;
+		}
+	}
+	if (this.slow_frame_counter > this.MAX_SLOW_FRAME_COUNTER) {
+		console.log("trying to increase resolution");
+		this.slow_frame_counter = (this.MAX_SLOW_FRAME_COUNTER + this.MIN_SLOW_FRAME_COUNTER) / 2;
+		if (this.resolution > this.MIN_RES) {
+			this.resolution--;
+		}
+	}
+	
 	setTimeout(function() { self.render_loop(fps) }, delay);
 }
 

@@ -1,14 +1,14 @@
 h1 {
 	color: #00f;
 }
-
+/*
 canvas#display {
 	float: left;
 	width: 960px;
 	height: 640px;
 	background: #ddd;
 }
-
+*/
 canvas#map {
 	float: left;
 	width: 48px;
