@@ -111,8 +111,10 @@ function ImageBank(callback) {
 function Display(element) {
 	console.log("Display", this);
 	this.element = element;
-	this.element.mozImageSmoothingEnabled = false;
 	this.size = new V($(element).width(), $(element).height());
+	this.center = new V(this.size.x / 2, this.size.y / 2); 
+	this.pixels_per_unit = this.size.x / 2;
+	
 }
 
 function Map(element) {
