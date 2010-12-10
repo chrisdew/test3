@@ -7,6 +7,8 @@ var DEGREES_180 = Math.PI;
 var DEGREES_90 = Math.PI / 2;
 var DEGREES_60 = Math.PI / 3;
 var DEGREES_30 = Math.PI / 6;
+var DEGREES_10 = Math.PI / 18;
+var DEGREES_5 = Math.PI / 36;
 
 function V(x, y) {
 	this.x = x;
@@ -142,10 +144,40 @@ Camera.prototype.update = function() {
 	this.rot += this.dir;
 	this.pos = this.pos.add(new V(this.speed,0).rot(this.rot));
 }
+
+Camera.prototype.render_display = function(display, walls) {
+	console.log("render_display", this, display, walls);
+	
+	// work out the on-screen position of each edge of each sector
+	for (var i in walls) {
+		var begin0 = walls[i].begin;
+		var end0 = walls[i].end;
+		
+		// translate into camera coordinate system
+		var begin1 = begin0.sub(this.pos); 
+		var end1 = end0.sub(this.pos); 
+		
+		// rotate into camera coordinate system
+		var begin2 = begin1.rot(-this.rot);
+		var end2 = end1.rot(-this.rot);
+		
+		console.log("wall", i, begin2, end2);
+	}
+	
+	
+}
+
+
+
+
+
+
+
+
+
 /**
  * This returns a Sector which passes through a column in the display.
  * @param {number} column (0.0 - left, 1.0 - right)
- */
 Camera.prototype.get_intersector = function(column) {
 	//console.log("Camera#get_intersector(", column, ")");
 	
@@ -257,13 +289,14 @@ Camera.prototype.render_map = function(map, walls) {
 		ctx.stroke();
 	}
 }
+ */
 
 
 function Engine(display_id, map_id, callback) {
 	console.log("Engine()", this);
 	this.display = new Display(document.getElementById(display_id));
 	this.map = new Map(document.getElementById(map_id));
-	this.camera = new Camera(new V(0,0), NORTH, DEGREES_60, 30);
+	this.camera = new Camera(new V(0,0), NORTH, DEGREES_90, 30);
 	this.walls = [ new Sector(new V(-3, -9), new V(+3, -9))
 				 , new Sector(new V(-3, -3), new V(-3, -9))
 				 ] ;
@@ -291,24 +324,6 @@ Engine.prototype.set_resize = function() {
     	var viewportWidth = window.innerWidth;
     	var viewportHeight = window.innerHeight;
 
-    	var canvasWidth = viewportWidth;
-    	var canvasHeight = viewportHeight;
-    	el.style.position = "fixed";
-    	el.setAttribute("width", canvasWidth);
-    	el.setAttribute("height", canvasHeight);
-		self.display.size = new V(canvasWidth, canvasHeight);
-    	//el.style.top = (viewportHeight - canvasHeight) / 2;
-    	//el.style.left = (viewportWidth - canvasWidth) / 2;
-
-    	//window.ctx = el.getContext("2d");
-    	//ctx.clearRect(0,0,canvasWidth,canvasHeight);
-    	//ctx.fillStyle = 'yellow';
-    	//ctx.moveTo(0, canvasHeight/2);
-    	//ctx.lineTo(canvasWidth/2, 0);
-    	//ctx.lineTo(canvasWidth, canvasHeight/2);
-    	//ctx.lineTo(canvasWidth/2, canvasHeight);
-    	//ctx.lineTo(0, canvasHeight/2);
-    	//ctx.fill()
 	}
 }
 
@@ -325,9 +340,9 @@ Engine.prototype.bind_keys = function () {
       case 40: // down, move player backward, set negative speed
         self.camera.speed = -0.6; break;
       case 37: // left, rotate player left
-        self.camera.dir = 0.03; break;
+        self.camera.dir = DEGREES_5; break;
       case 39: // right, rotate player right
-        self.camera.dir = -0.03; break;
+        self.camera.dir = -DEGREES_5; break;
     }
   }
   // stop the player movement/rotation when the keys are released
@@ -344,73 +359,20 @@ Engine.prototype.bind_keys = function () {
     }
   }
 }
-Engine.prototype.render_loop = function(fps){
+Engine.prototype.render_loop = function(delay){
+	var that = this;
+	this.camera.render_display(this.display, this.walls);
 	
-	
-	
-	var start = (new Date()).getMilliseconds();
-	this.camera.render_display(this.display, this.walls, this.image_bank.texture, this.resolution);
-	//this.affine();
-	var end = (new Date()).getMilliseconds();
-	var self = this;
-	var delay = 1000/fps - (end - start);
-	if (delay < 2 || start > end) { delay = 2; }
-	console.log("render delay", delay);
-	
-	if (delay <= 2) { // running slow
-		this.slow_frame_counter--;
-	}
-	if (delay > 5) { // lots of spare cpu }
-		this.slow_frame_counter++;
-	}
-	
-	if (this.slow_frame_counter < this.MIN_SLOW_FRAME_COUNTER) {
-		console.log("trying to decrease resolution");
-		this.slow_frame_counter = (this.MAX_SLOW_FRAME_COUNTER + this.MIN_SLOW_FRAME_COUNTER) / 2;
-		if (this.resolution < this.MAX_RES) {
-			this.resolution++;
-		}
-	}
-	if (this.slow_frame_counter > this.MAX_SLOW_FRAME_COUNTER) {
-		console.log("trying to increase resolution");
-		this.slow_frame_counter = (this.MAX_SLOW_FRAME_COUNTER + this.MIN_SLOW_FRAME_COUNTER) / 2;
-		if (this.resolution > this.MIN_RES) {
-			this.resolution--;
-		}
-	}
-	
-	setTimeout(function() { self.render_loop(fps) }, delay);
+	setTimeout(function() { that.render_loop(delay) }, delay);
 }
 
-Engine.prototype.control_loop = function(fps){
-	var start = (new Date()).getMilliseconds();
+Engine.prototype.control_loop = function(delay){
+	var that = this;
 	this.camera.update();
-	var end = (new Date()).getMilliseconds();
-	var self = this;
-	var delay = 1000/fps - (end - start);
-	if (delay < 1 || start > end) { delay = 1; }
-	//console.log("control delay", delay);
-	setTimeout(function() { self.control_loop(fps) }, delay);
-}
-
-
-Engine.prototype.affine = function(fps){
-	var ctx = this.display.element.getContext("2d");
-	
-	var h = this.image_bank.texture.height;
-	var w = this.image_bank.texture.width;
-	
-	ctx.setTransform(1, 0, -0.2, 1, 0, 0);
-	ctx.drawImage(this.image_bank.texture, 0, 0);
-
+	setTimeout(function() { that.control_loop(delay) }, delay);
 }
 
 Engine.prototype.render_display = function(res) {
-	//console.log("Engine#render_display()");
-	this.camera.render_display(this.display, this.walls, this.image_bank.texture, res);
+	this.camera.render_display(this.display, this.walls);
 }
 
-Engine.prototype.render_map = function() {
-	console.log("Engine#render_map()");
-	this.camera.render_map(this.map, this.walls);	
-}

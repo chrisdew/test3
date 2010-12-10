@@ -11,11 +11,10 @@
 		<script type="text/javascript">
 			$(document).ready(function() {
    				// do stuff when DOM is ready
-			    alert("start?");
 				engine = new Engine("display", "map", function() {
 					console.log("foo");
-				    engine.render_loop(30);
-				    engine.control_loop(30);
+				    engine.render_loop(3000);
+				    engine.control_loop(50);
 				});
  			});
 		</script> 
